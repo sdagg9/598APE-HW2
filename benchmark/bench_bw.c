@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h>
 
 typedef struct {
   uint8_t *data;
@@ -83,6 +84,7 @@ static void rgb_to_grayscale_fhe(Ciphertext *r_enc, Ciphertext *g_enc,
   int64_t inv3 = mod_inverse(3, t);
   assert(inv3 != -1 &&
          "3 has no modular inverse modulo t; choose t coprime with 3");
+  #pragma omp parallel for
   for (int i = 0; i < total_pixels; i++) {
     Ciphertext sum = add_cipher(r_enc[i], g_enc[i], q, poly_mod);
     sum = add_cipher(sum, b_enc[i], q, poly_mod);
@@ -132,6 +134,7 @@ int main(int argc, char **argv) {
   Ciphertext *b_enc = (Ciphertext *)malloc(total_pixels * sizeof(Ciphertext));
 
   clock_t enc_start = clock();
+  #pragma omp parallel for
   for (int i = 0; i < total_pixels; i++) {
     uint8_t r = img.data[i * img.channels + 0];
     uint8_t g = img.data[i * img.channels + 1];
@@ -158,6 +161,7 @@ int main(int argc, char **argv) {
   clock_t dec_start = clock();
   int64_t th1 = (t + 2) / 3;
   int64_t th2 = (2 * t + 2) / 3;
+  #pragma omp parallel for
   for (int i = 0; i < total_pixels; i++) {
     int64_t val = decrypt(sk, n, q, poly_mod, t, gray_enc[i]);
     if (val >= th2) {
