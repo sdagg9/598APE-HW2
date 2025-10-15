@@ -102,11 +102,13 @@ void poly_divmod(Poly num, Poly den, Poly *quot, Poly *rem) {
 
   double d_lead = get_coeff(den, ddeg);
   assert(fabs(d_lead) > 1e-9);
+  double d_lead_inv = 1.0 / round(d_lead);
+
 
   for (int64_t k = ndeg - ddeg; k >= 0; --k) {
     int64_t target_deg = ddeg + k;
     double r_coeff = get_coeff(*rem, target_deg);
-    double coeff = trunc(round(r_coeff) / round(d_lead));
+    double coeff = trunc(round(r_coeff) * d_lead_inv);
     quot->coeffs[k] += coeff;
 
     for (int i = 0; i < MAX_POLY_DEGREE; i++) {
@@ -124,10 +126,11 @@ void poly_divmod(Poly num, Poly den, Poly *quot, Poly *rem) {
 Poly poly_round_div_scalar(Poly x, double divisor) {
   Poly out = create_poly();
   assert(fabs(divisor) > 1e-9);
+  double inv_divisor = 1.0 / divisor;
 
   for (int i = 0; i < MAX_POLY_DEGREE; i++) {
     double v = x.coeffs[i];
-    out.coeffs[i] = round(v / divisor);
+    out.coeffs[i] = round(v * inv_divisor);
   }
   return out;
 }
