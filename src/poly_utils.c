@@ -2,6 +2,23 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+static inline bool is_power_of_2_double(double d) {
+  if (d <= 0.0) return false;
+  
+  if (d != floor(d)) return false;
+  
+  int64_t n = (int64_t)d;
+  return (n & (n - 1)) == 0;
+}
+
+static inline int log2_double(double d) {
+  int64_t n = (int64_t)d;
+  int log = 0;
+  while (n >>= 1) log++;
+  return log;
+}
 
 Poly create_poly(void) {
   Poly p;
@@ -44,11 +61,24 @@ void set_coeff(Poly *p, int64_t degree, double value) {
 
 Poly coeff_mod(Poly p, double modulus) {
   Poly out = create_poly();
-  for (int i = 0; i < MAX_POLY_DEGREE; i++) {
-    if (fabs(p.coeffs[i]) > 1e-9) {
-      double rounded = round(p.coeffs[i]);
-      double m = positive_fmod(rounded, modulus);
-      out.coeffs[i] = m;
+  if (is_power_of_2_double(modulus)) {
+    int64_t mod_int = (int64_t)modulus;
+    int64_t mask = mod_int - 1;
+    
+    for (int i = 0; i < MAX_POLY_DEGREE; i++) {
+      if (fabs(p.coeffs[i]) > 1e-9) {
+        int64_t rounded = (int64_t)round(p.coeffs[i]);
+        int64_t m = rounded & mask;
+        out.coeffs[i] = (double)m;
+      }
+    }
+  } else {
+    for (int i = 0; i < MAX_POLY_DEGREE; i++) {
+      if (fabs(p.coeffs[i]) > 1e-9) {
+        double rounded = round(p.coeffs[i]);
+        double m = positive_fmod(rounded, modulus);
+        out.coeffs[i] = m;
+      }
     }
   }
   return out;
@@ -121,13 +151,34 @@ void poly_divmod(Poly num, Poly den, Poly *quot, Poly *rem) {
   assert(poly_degree(*rem) < poly_degree(den));
 }
 
+// Poly poly_round_div_scalar(Poly x, double divisor) {
+//   Poly out = create_poly();
+//   assert(fabs(divisor) > 1e-9);
+
+//   for (int i = 0; i < MAX_POLY_DEGREE; i++) {
+//     double v = x.coeffs[i];
+//     out.coeffs[i] = round(v / divisor);
+//   }
+//   return out;
+// }
 Poly poly_round_div_scalar(Poly x, double divisor) {
   Poly out = create_poly();
   assert(fabs(divisor) > 1e-9);
 
-  for (int i = 0; i < MAX_POLY_DEGREE; i++) {
-    double v = x.coeffs[i];
-    out.coeffs[i] = round(v / divisor);
+  if (is_power_of_2_double(divisor)) {
+    // Fast path: bit shift
+    int shift = log2_double(divisor);
+    
+    for (int i = 0; i < MAX_POLY_DEGREE; i++) {
+      int64_t v = (int64_t)round(x.coeffs[i]);
+      out.coeffs[i] = (double)(v >> shift);
+    }
+  } else {
+    // Original slow path
+    for (int i = 0; i < MAX_POLY_DEGREE; i++) {
+      double v = x.coeffs[i];
+      out.coeffs[i] = round(v / divisor);
+    }
   }
   return out;
 }
