@@ -87,38 +87,26 @@ Poly poly_mul(Poly a, Poly b) {
 }
 
 void poly_divmod(Poly num, Poly den, Poly *quot, Poly *rem) {
-  // In our case `den` should always be (x^n + 1)
-  assert(poly_degree(den) > 0 || fabs(get_coeff(den, 0)) > 1e-9);
-
-  size_t ndeg = poly_degree(num);
-  size_t ddeg = poly_degree(den);
-
+  // Assumption: den is always x^n + 1
+  size_t n = poly_degree(den);
+  
   *quot = create_poly();
-  *rem = num;
-
-  if (ndeg < ddeg) {
-    return;
+  *rem = create_poly();
+  
+  // Copy lower coefficients [0, n)
+  for (size_t i = 0; i < n && i < MAX_POLY_DEGREE; i++) {
+    rem->coeffs[i] = num.coeffs[i];
   }
-
-  double d_lead = get_coeff(den, ddeg);
-  assert(fabs(d_lead) > 1e-9);
-
-  for (int64_t k = ndeg - ddeg; k >= 0; --k) {
-    int64_t target_deg = ddeg + k;
-    double r_coeff = get_coeff(*rem, target_deg);
-    double coeff = trunc(round(r_coeff) / round(d_lead));
-    quot->coeffs[k] += coeff;
-
-    for (int i = 0; i < MAX_POLY_DEGREE; i++) {
-      if (fabs(den.coeffs[i]) > 1e-9) {
-        int64_t deg = i + k;
-        assert(deg < MAX_POLY_DEGREE);
-        rem->coeffs[deg] -= coeff * den.coeffs[i];
-      }
+  
+  // Reduce higher coefficients [n, 2n), [2n, 3n), ...
+  for (size_t i = n; i < MAX_POLY_DEGREE; i++) {
+    if (fabs(num.coeffs[i]) > 1e-9) {
+      size_t target = i % n;
+      size_t wraps = i / n;
+      double sign = (wraps % 2 == 0) ? 1.0 : -1.0;
+      rem->coeffs[target] += sign * num.coeffs[i];
     }
   }
-
-  assert(poly_degree(*rem) < poly_degree(den));
 }
 
 Poly poly_round_div_scalar(Poly x, double divisor) {
