@@ -12,11 +12,15 @@ Poly create_poly(void) {
 }
 
 double positive_fmod(double x, double m) {
-  assert(m > 0.0);
-  double r = fmod(x, m);
-  if (r < 0.0)
-    r += m;
-  return r;
+  int64_t x_int = (int64_t)round(x);
+  int64_t mask = (int64_t)m - 1;                                                                              
+                        
+  if (x_int >= 0) {
+    return (double)(x_int & mask);
+  } else {                                           
+    int64_t result = (x_int % (int64_t)m);
+    return (double)((result + (int64_t)m) & mask);
+  }                       
 }
 
 int64_t poly_degree(Poly p) {
