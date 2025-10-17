@@ -1,3 +1,15 @@
+# Peer Grading Instructions
+
+We've given a script to help with running the benchmarks: `./benchmark <benchmark_name>`. This should create a subdirectory for each benchmark with compile and program output and perf.stat for that benchmark for perf metrics. If the script does not work, please run each benchmark on your own!
+
+To run the following optimizations:
+* baseline: Run from the `main` branch.
+* OpenMP: Run from the `parallelization` branch.
+* PolyDivMod: Run from the `poly_div_mod` branch.
+* inverse multiplication instead of division: Run from the `inv_division` branch.
+* Bithacks: Run from the `bithacks!` branch
+
+
 # 598APE-HW2: Homomorphic Encryption
 
 This is a C implementation of a SHE scheme based on the [Fan-Vercauteren](https://eprint.iacr.org/2012/144) RLWE-based approach and [toy implementations in Python](https://bit-ml.github.io/blog/post/homomorphic-encryption-toy-implementation-in-python/). Your task is to build and run it, then consider performance improvements.
