@@ -87,18 +87,16 @@ Poly poly_mul(Poly a, Poly b) {
 }
 
 void poly_divmod(Poly num, Poly den, Poly *quot, Poly *rem) {
-  // Assumption: den is always x^n + 1
+  // In our case `den` should always be (x^n + 1)
   size_t n = poly_degree(den);
   
   *quot = create_poly();
   *rem = create_poly();
   
-  // Copy lower coefficients [0, n)
   for (size_t i = 0; i < n && i < MAX_POLY_DEGREE; i++) {
     rem->coeffs[i] = num.coeffs[i];
   }
   
-  // Reduce higher coefficients [n, 2n), [2n, 3n), ...
   for (size_t i = n; i < MAX_POLY_DEGREE; i++) {
     if (fabs(num.coeffs[i]) > 1e-9) {
       size_t target = i % n;
