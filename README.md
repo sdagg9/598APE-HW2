@@ -8,7 +8,12 @@ To run the following optimizations:
 * PolyDivMod: Run from the `poly_div_mod` branch.
 * inverse multiplication instead of division: Run from the `inv_division` branch.
 * Bithacks: Run from the `bithacks!` branch
+* GCC Flags: Run from the `gcc-flags` branch
 
+To run the container:
+* ```docker run -it -v "$(pwd)":/host --privileged --security-opt seccomp=unconfined wsmoses/598ape /bin/bash```
+* ```apt update```
+* ```apt install -y linux-tools-6.8.0-85-generic linux-cloud-tools-6.8.0-85-generic```
 
 # 598APE-HW2: Homomorphic Encryption
 
