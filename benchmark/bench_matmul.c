@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h>
 
 static int64_t **alloc_matrix(size_t rows, size_t cols) {
   int64_t **M = (int64_t **)malloc(rows * sizeof(int64_t *));
@@ -97,6 +98,7 @@ int main(int argc, char **argv) {
 
   // Encrypt B (and optionally A)
   Ciphertext **B_enc = alloc_ct_matrix(dim, dim);
+  #pragma omp parallel for collapse(2)
   for (size_t j = 0; j < dim; ++j) {
     for (size_t k = 0; k < dim; ++k) {
       B_enc[j][k] = encrypt(pk, n, q, poly_mod, t, B[j][k]);
@@ -108,6 +110,7 @@ int main(int argc, char **argv) {
   double p = pow(q, 2.0);
   if (mode == 1) {
     A_enc = alloc_ct_matrix(dim, dim);
+    #pragma omp parallel for collapse(2)
     for (size_t i = 0; i < dim; ++i) {
       for (size_t j = 0; j < dim; ++j) {
         A_enc[i][j] = encrypt(pk, n, q, poly_mod, t, A[i][j]);
@@ -122,6 +125,7 @@ int main(int argc, char **argv) {
 
   if (mode == 0) {
     // Mode 0: ct * pt matmul: C_enc[i][k] = sum_j A[i][j] * Enc(B[j][k])
+    #pragma omp parallel for collapse(2)
     for (size_t i = 0; i < dim; ++i) {
       for (size_t k = 0; k < dim; ++k) {
         int first = 1;
@@ -141,6 +145,7 @@ int main(int argc, char **argv) {
     }
   } else {
     // Mode 1: ct * ct matmul: C_enc[i][k] = sum_j Enc(A[i][j]) * Enc(B[j][k])
+    #pragma omp parallel for collapse(2)
     for (size_t i = 0; i < dim; ++i) {
       for (size_t k = 0; k < dim; ++k) {
         int first = 1;
@@ -163,6 +168,7 @@ int main(int argc, char **argv) {
 
   // Decrypt result matrix
   int64_t **C_dec = alloc_matrix(dim, dim);
+  #pragma omp parallel for collapse(2)
   for (size_t i = 0; i < dim; ++i) {
     for (size_t k = 0; k < dim; ++k) {
       C_dec[i][k] = decrypt(sk, n, q, poly_mod, t, C_enc[i][k]);

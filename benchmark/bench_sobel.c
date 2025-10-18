@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h>  
 
 typedef struct {
   uint8_t *data;
@@ -44,6 +45,7 @@ static const int sobel_gy[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
 
 static void rgb_to_grayscale(uint8_t *input, uint8_t *output, int width,
                              int height, int channels) {
+  #pragma omp parallel for
   for (int i = 0; i < width * height; i++) {
     if (channels >= 3) {
       uint8_t r = input[i * channels + 0];
@@ -58,6 +60,7 @@ static void rgb_to_grayscale(uint8_t *input, uint8_t *output, int width,
 
 static void sobel_plain(uint8_t *input, uint8_t *output, int width,
                         int height) {
+  #pragma omp parallel for collapse(2)
   for (int y = 1; y < height - 1; y++) {
     for (int x = 1; x < width - 1; x++) {
       int gx = 0, gy = 0;
@@ -173,6 +176,7 @@ int main(int argc, char **argv) {
   Ciphertext *gray_enc =
       (Ciphertext *)malloc(total_pixels * sizeof(Ciphertext));
   clock_t enc_start = clock();
+  #pragma omp parallel for
   for (int i = 0; i < total_pixels; i++) {
     gray_enc[i] = encrypt(pk, n, q, poly_mod, t, gray[i]);
   }
@@ -190,6 +194,7 @@ int main(int argc, char **argv) {
   printf("Decrypting FHE Sobel result...\n");
   uint8_t *fhe_sobel = (uint8_t *)malloc(total_pixels * sizeof(uint8_t));
   clock_t dec_start = clock();
+  #pragma omp parallel for
   for (int i = 0; i < total_pixels; i++) {
     int64_t val = decrypt(sk, n, q, poly_mod, t, sobel_enc[i]);
     // Restore negative `gx + gy`
