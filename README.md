@@ -4,11 +4,17 @@ We've given a script to help with running the benchmarks: `./benchmark <benchmar
 
 To run the following optimizations:
 * baseline: Run from the `main` branch.
+* All optimizations: Run from the `all-optimizations` branch
 * OpenMP: Run from the `parallelization` branch.
 * PolyDivMod: Run from the `poly_div_mod` branch.
 * inverse multiplication instead of division: Run from the `inv_division` branch.
 * Bithacks: Run from the `bithacks!` branch
+* GCC Flags: Run from the `gcc-flags` branch
 
+To run the container:
+* ```docker run -it -v "$(pwd)":/host --privileged --security-opt seccomp=unconfined wsmoses/598ape /bin/bash```
+* ```apt update```
+* ```apt install -y linux-tools-6.8.0-85-generic linux-cloud-tools-6.8.0-85-generic```
 
 # 598APE-HW2: Homomorphic Encryption
 
